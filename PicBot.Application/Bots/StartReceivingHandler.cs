@@ -95,7 +95,14 @@ internal sealed class StartReceivingHandler(
 
             if (stateHistory.IsNull())
             {
-                stateHistory = await stateFactory.GetStateMainAsync(user.ChatId, cancellationToken);
+                if (chatMessage.Message.PhotoDataOrNull.IsNotNull())
+                {
+                    stateHistory = await stateFactory.GetStateByCommandsTypeOrDefaultAsync(user.ChatId, CommandCollection.Instance.GetValueByKey(ECommandsType.SaveImage), cancellationToken);
+                }
+                else
+                {
+                    stateHistory = await stateFactory.GetStateMainAsync(user.ChatId, cancellationToken);
+                }
             }
 
             await using var stateContext = await stateContextFactory.CreateStateContextAsync(user, stateHistory!, chatMessage, markupNextState, cancellationToken);

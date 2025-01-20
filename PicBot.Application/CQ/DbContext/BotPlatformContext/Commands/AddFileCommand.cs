@@ -1,7 +1,8 @@
-﻿using PicBot.Domain.Contexts.BotPlatform;
+﻿using Microsoft.EntityFrameworkCore;
 using PicBot.Application.Abstractions.DBContext;
 using PicBot.Domain.Abstractions.CQRS.Command;
 using PicBot.Domain.Abstractions.Helpers;
+using TBotPlatform.Extension;
 
 namespace PicBot.Application.CQ.DbContext.BotPlatformContext.Commands;
 
@@ -12,7 +13,14 @@ internal class AddFileCommandHandler(IBotPlatformDbContext tgBotDbContext, IDate
 {
     public async Task<int> Handle(AddFileCommand request, CancellationToken cancellationToken)
     {
-        var file = new FileBox
+        var file = await tgBotDbContext.FilesBox.FirstOrDefaultAsync(z => z.FileId == request.FileId, cancellationToken);
+
+        if (file.IsNotNull())
+        {
+            return file.Id;
+        }
+
+        file = new()
         {
             UserId = request.UserId,
             FileId = request.FileId,
