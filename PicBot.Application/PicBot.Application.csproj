@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="TBotPlatform.Common" Version="1.0.9-beta3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\PicBot.Domain\PicBot.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="**\DependencyInjection.*.cs">
+			<DependentUpon>DependencyInjection.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+</Project>

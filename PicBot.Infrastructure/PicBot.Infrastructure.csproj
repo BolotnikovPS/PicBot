@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Consul" Version="1.7.14.4" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.10" />
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
+		<PackageReference Include="Quartz.AspNetCore" Version="3.13.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.24" />
+		<PackageReference Include="Winton.Extensions.Configuration.Consul" Version="3.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\PicBot.Application\PicBot.Application.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="**\DependencyInjection.*.cs">
+			<DependentUpon>DependencyInjection.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+</Project>
