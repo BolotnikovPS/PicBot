@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using PicBot.Application.Attributes;
+using PicBot.Application.Bots.BotPlatform.MenuButton;
 using PicBot.Domain.Abstractions.BotControl;
 using PicBot.Domain.Contexts.BotPlatform;
 using PicBot.Domain.Enums;
@@ -7,7 +8,7 @@ using TBotPlatform.Contracts.Abstractions.Contexts.AsyncDisposable;
 
 namespace PicBot.Application.Bots.BotPlatform.States.MessageStates;
 
-[MyStateInlineActivator(CommandsTypes = [ECommandsType.Start,])]
+[MyStateActivator(typeof(StartButton), CommandsTypes = [ECommandsType.Start,])]
 internal class MessageState : IMyState
 {
     public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)

@@ -3,7 +3,7 @@ using PicBot.Domain.Enums;
 using PicBot.View;
 
 await HostExtensions
-     .CreateHost(EBotType.TestBots)
+     .CreateHost(EBotType.PicBot)
      .ConfigureWebHostDefaults(
           webBuilder =>
           {

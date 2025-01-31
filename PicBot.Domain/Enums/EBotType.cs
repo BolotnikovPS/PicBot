@@ -3,5 +3,5 @@
 public enum EBotType
 {
     None = 0,
-    TestBots,
+    PicBot,
 }
