@@ -13,7 +13,7 @@ namespace PicBot.Application.Bots.BotPlatform.States.AdminStates.UserStates;
 [MyStateInlineActivator]
 internal class RefreshUserMenuState(IEventDomainPublisher domainPublisher, ICacheService cacheService) : MyBaseState(cacheService), IMyState
 {
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
         if (context.MarkupNextState.IsNull()
             || context.MarkupNextState.Data.IsNull()
@@ -24,10 +24,10 @@ internal class RefreshUserMenuState(IEventDomainPublisher domainPublisher, ICach
 
         await domainPublisher.PublishAsync(new RefreshMenuMessage(int.Parse(context.MarkupNextState.Data)), cancellationToken);
 
-        await context.SendTextMessageAsync(GetDescription(ETextsType.MenuIsRefresh), cancellationToken);
+        await context.SendTextMessage(GetDescription(ETextsType.MenuIsRefresh), cancellationToken);
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

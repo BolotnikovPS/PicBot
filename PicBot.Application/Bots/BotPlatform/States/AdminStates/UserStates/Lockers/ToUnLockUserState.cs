@@ -13,14 +13,14 @@ internal class ToUnLockUserState(IMediator mediator) : IMyState
 {
     private const string Text = "Пользователь разблокирован.";
 
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
         await mediator.Send(new UpdateUserCommand(long.Parse(context.MarkupNextState.Data), EUserBlockType.None), cancellationToken);
 
-        await context.UpdateMarkupTextAndDropButtonAsync(Text, cancellationToken);
+        await context.UpdateMarkupTextAndDropButton(Text, cancellationToken);
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

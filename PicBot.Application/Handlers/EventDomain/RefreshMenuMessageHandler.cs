@@ -16,9 +16,9 @@ internal class RefreshMenuMessageHandler(IMediator mediator, IStateContextFactor
         foreach (var user in users)
         {
             var state = stateFactory.GetStateByNameOrDefault();
-            await using var stateContext = stateContextFactory.CreateStateContext(user);
+            await using var stateContext = stateContextFactory.GetStateContext(user);
 
-            await menuButtonFactory.UpdateMainButtonsByStateAsync(user, stateContext, state, cancellationToken);
+            await menuButtonFactory.UpdateMainButtonsByState(user, stateContext, state, cancellationToken);
         }
     }
 }

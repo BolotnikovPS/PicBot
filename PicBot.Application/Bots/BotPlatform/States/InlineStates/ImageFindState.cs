@@ -13,9 +13,9 @@ namespace PicBot.Application.Bots.BotPlatform.States.InlineStates;
 [MyStateInlineActivator(CommandsTypes = [ECommandsType.FindImage,])]
 internal class ImageFindState(IImageService imageService) : IMyState
 {
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
-        var images = await imageService.GetImageByTextAsync(context.ChatUpdate.InlineQueryOrNull!.Query, cancellationToken);
+        var images = await imageService.GetImageByTextAsync(context.ChatUpdate.InlineQuery?.Query, cancellationToken);
 
         var i = 0;
         var inlineQueryResultPhotos = images
@@ -30,18 +30,10 @@ internal class ImageFindState(IImageService imageService) : IMyState
                                           })
                                      .ToList();
 
-        var telegramContext = context.GetTelegramContext();
-
-        await telegramContext.MakeRequestAsync(Request, cancellationToken);
-        return;
-
-        Task Request(ITelegramBotClient req)
-        {
-            return req.AnswerInlineQuery(context.ChatUpdate.InlineQueryOrNull!.Id, inlineQueryResultPhotos, cancellationToken: cancellationToken);
-        }
+        await context.TelegramContext.AnswerInlineQuery(context.ChatUpdate.InlineQuery!.Id, inlineQueryResultPhotos, cancellationToken: cancellationToken);
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

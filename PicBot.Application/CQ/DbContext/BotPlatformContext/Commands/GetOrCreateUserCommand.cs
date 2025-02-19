@@ -7,8 +7,8 @@ using PicBot.Domain.Abstractions.Helpers;
 using PicBot.Domain.Bots;
 using PicBot.Domain.Contexts.BotPlatform.Enums;
 using TBotPlatform.Contracts.Bots.ChatUpdate;
-using TBotPlatform.Contracts.Bots.ChatUpdate.Enums;
 using TBotPlatform.Extension;
+using Telegram.Bot.Types.Enums;
 using User = PicBot.Domain.Contexts.BotPlatform.User;
 
 namespace PicBot.Application.CQ.DbContext.BotPlatformContext.Commands;
@@ -37,16 +37,16 @@ internal class GetOrCreateUserCommandHandler(
 
         var tgUser = request.TelegramUser.UserOrNull;
 
-        logger.LogInformation("Получение пользователя по FromUser = {userId}", tgUser!.TgUserId);
+        logger.LogInformation("Получение пользователя по FromUser = {userId}", tgUser!.Id);
 
-        var result = await tgBotDbContext.Users.FirstOrDefaultAsync(z => z.TgUserId == tgUser.TgUserId, cancellationToken);
+        var result = await tgBotDbContext.Users.FirstOrDefaultAsync(z => z.TgUserId == tgUser.Id, cancellationToken);
 
         if (result.IsNotNull())
         {
             return result;
         }
 
-        logger.LogInformation("Создание пользователя по FromUser = {userId}", tgUser.TgUserId);
+        logger.LogInformation("Создание пользователя по FromUser = {userId}", tgUser.Id);
 
         var chatIdEx = new Exception("Не смогли определить данные чата");
         var chat = request.TelegramUser.ChatOrNull;
@@ -66,8 +66,8 @@ internal class GetOrCreateUserCommandHandler(
 
         result = new()
         {
-            TgUserId = tgUser.TgUserId,
-            UserName = tgUser.UserName,
+            TgUserId = tgUser.Id,
+            UserName = tgUser.Username,
             ChatId = chat.Id,
             FirstName = tgUser.FirstName,
             LastName = tgUser.LastName,
@@ -82,7 +82,7 @@ internal class GetOrCreateUserCommandHandler(
         return result;
     }
 
-    private static void ValidChatData(BotTypeData botTypeData, EChatType chatType)
+    private static void ValidChatData(BotTypeData botTypeData, ChatType chatType)
     {
         if (botTypeData.BotSetting.IsNotNull()
             && botTypeData.BotSetting.ChatTypes.IsNotNull()

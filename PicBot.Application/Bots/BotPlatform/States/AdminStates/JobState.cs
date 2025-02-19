@@ -19,13 +19,13 @@ internal class JobState(ISchedulerJobFactory schedulerFactory, IDateTimeHelper d
 {
     private const string NoJobText = "Нет джобов.";
 
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
         var jobs = await schedulerFactory.GetJobListAsync(cancellationToken);
 
         if (jobs.IsNull())
         {
-            await context.SendTextMessageAsync(NoJobText, cancellationToken);
+            await context.SendTextMessage(NoJobText, cancellationToken);
 
             return;
         }
@@ -41,7 +41,7 @@ internal class JobState(ISchedulerJobFactory schedulerFactory, IDateTimeHelper d
 
             inlineButtons.Add(new MyInlineMarkupState(EInlineButtonsType.ToClose, nameof(MessageCloseState)));
 
-            await context.SendOrUpdateTextMessageAsync($"Список джобов на {dateTimeHelper.GetLocalDateTimeNow().ToRussianWithHours()}", inlineButtons, null, cancellationToken);
+            await context.SendOrUpdateTextMessage($"Список джобов на {dateTimeHelper.GetLocalDateTimeNow().ToRussianWithHours()}", inlineButtons, null, cancellationToken);
 
             return;
         }
@@ -52,18 +52,18 @@ internal class JobState(ISchedulerJobFactory schedulerFactory, IDateTimeHelper d
 
             if (job.IsNull())
             {
-                await context.SendOrUpdateTextMessageAsync($"🛑 Задача {context.MarkupNextState.Data} не найдена.", cancellationToken);
+                await context.SendOrUpdateTextMessage($"🛑 Задача {context.MarkupNextState.Data} не найдена.", cancellationToken);
 
                 return;
             }
 
             await schedulerFactory.StartJobAsync(job, cancellationToken);
 
-            await context.SendOrUpdateTextMessageAsync($"💪 Задача {job.Name} запущена.", cancellationToken);
+            await context.SendOrUpdateTextMessage($"💪 Задача {job.Name} запущена.", cancellationToken);
         }
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

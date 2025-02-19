@@ -69,8 +69,8 @@ internal sealed class BaseJob<T>(
         {
             try
             {
-                await using var stateContext = stateContextFactory.CreateStateContext(admin);
-                await stateContext.SendTextMessageAsync(sbText.ToString(), cancellationToken);
+                await using var stateContext = stateContextFactory.GetStateContext(admin);
+                await stateContext.SendTextMessage(sbText.ToString(), cancellationToken);
             }
             catch (Exception ex)
             {

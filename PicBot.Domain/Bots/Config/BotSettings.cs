@@ -1,4 +1,4 @@
-﻿using TBotPlatform.Contracts.Bots.ChatUpdate.Enums;
+﻿using Telegram.Bot.Types.Enums;
 
 namespace PicBot.Domain.Bots.Config;
 
@@ -6,5 +6,5 @@ public class BotSettings
 {
     public bool WithRegistration { get; set; }
 
-    public List<EChatType> ChatTypes { get; set; }
+    public List<ChatType> ChatTypes { get; set; }
 }

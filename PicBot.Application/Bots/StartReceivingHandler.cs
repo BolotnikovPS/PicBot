@@ -1,19 +1,22 @@
 ﻿#nullable enable
-using PicBot.Application.CQ.DbContext.BotPlatformContext.Commands;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using PicBot.Application.CQ.DbContext.BotPlatformContext.Commands;
+using PicBot.Application.Extensions;
+using PicBot.Domain.Abstractions.BotControl;
+using PicBot.Domain.Contexts.BotPlatform.Enums;
+using PicBot.Domain.EnumCollection;
+using PicBot.Domain.Enums;
+using TBotPlatform.Common;
+using TBotPlatform.Contracts;
 using TBotPlatform.Contracts.Abstractions.Factories;
 using TBotPlatform.Contracts.Abstractions.Handlers;
 using TBotPlatform.Contracts.Bots;
 using TBotPlatform.Contracts.Bots.ChatUpdate;
-using TBotPlatform.Contracts.Bots.ChatUpdate.Enums;
 using TBotPlatform.Extension;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using User = PicBot.Domain.Contexts.BotPlatform.User;
-using PicBot.Domain.Contexts.BotPlatform.Enums;
-using PicBot.Domain.EnumCollection;
-using PicBot.Domain.Abstractions.BotControl;
-using PicBot.Domain.Enums;
-using PicBot.Application.Extensions;
 
 namespace PicBot.Application.Bots;
 
@@ -26,7 +29,7 @@ internal sealed class StartReceivingHandler(
     IBotType botType
     ) : IStartReceivingHandler
 {
-    public async Task HandleUpdateAsync(ChatUpdate chatUpdate, MarkupNextState? markupNextState, TelegramMessageUserData telegramUser, CancellationToken cancellationToken)
+    public async Task HandleUpdate(Update chatUpdate, MarkupNextState? markupNextState, TelegramMessageUserData telegramUser, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         User user;
@@ -39,10 +42,10 @@ internal sealed class StartReceivingHandler(
                 return;
             }
 
-            if (user.IsLock() && chatUpdate.UpdateType.NotIn(EChatUpdateType.MyChatMember))
+            if (user.IsLock() && chatUpdate.Type.NotIn(UpdateType.MyChatMember))
             {
-                var stateHistory = stateFactory.GetLockState();
-                await using var stateContext = await stateContextFactory.CreateStateContextAsync(user, stateHistory, chatUpdate, cancellationToken);
+                var stateHistory = stateFactory.LockState;
+                await using var stateContext = await stateContextFactory.CreateStateContext(user, stateHistory, chatUpdate, cancellationToken);
 
                 return;
             }
@@ -54,67 +57,67 @@ internal sealed class StartReceivingHandler(
             return;
         }
 
-        if (chatUpdate.UpdateType.In(EChatUpdateType.Message, EChatUpdateType.CallbackQuery))
+        if (chatUpdate.Type.In(UpdateType.Message, UpdateType.CallbackQuery))
         {
             await DoWorkMessageAsync(user, chatUpdate, markupNextState, cancellationToken);
             return;
         }
 
-        if (chatUpdate.UpdateType.In(EChatUpdateType.MyChatMember))
+        if (chatUpdate.Type.In(UpdateType.MyChatMember))
         {
             await DoWorkMemberAsync(user, chatUpdate, cancellationToken);
         }
 
-        if (chatUpdate.UpdateType == EChatUpdateType.InlineQuery)
+        if (chatUpdate.Type == UpdateType.InlineQuery)
         {
             await DoWorkImageAsync(user, chatUpdate, cancellationToken);
         }
     }
 
-    private async Task DoWorkImageAsync(User user, ChatUpdate chatMessage, CancellationToken cancellationToken)
+    private async Task DoWorkImageAsync(User user, Update chatMessage, CancellationToken cancellationToken)
     {
-        var stateTypeCommand = CommandCollection.Instance.GetKeyByValue(chatMessage.InlineQueryOrNull?.Query);
+        var stateTypeCommand = CommandCollection.Instance.GetKeyByValue(chatMessage.InlineQuery?.Query);
 
         var command = stateTypeCommand != ECommandsType.None ? stateTypeCommand : ECommandsType.FindImage;
 
-        var stateHistory = await stateFactory.GetStateByCommandsTypeOrDefaultAsync(user.ChatId, CommandCollection.Instance.GetValueByKey(command), cancellationToken);
+        var stateHistory = await stateFactory.GetStateByCommandsTypeOrDefault(user.ChatId, CommandCollection.Instance.GetValueByKey(command), cancellationToken);
 
-        await using var stateContext = await stateContextFactory.CreateStateContextAsync(user, stateHistory, chatUpdate: chatMessage, cancellationToken);
+        await using var stateContext = await stateContextFactory.CreateStateContext(user, stateHistory, chatMessage, cancellationToken);
     }
 
-    private async Task DoWorkMessageAsync(User user, ChatUpdate chatMessage, MarkupNextState? markupNextState, CancellationToken cancellationToken)
+    private async Task DoWorkMessageAsync(User user, Update chatMessage, MarkupNextState? markupNextState, CancellationToken cancellationToken)
     {
         try
         {
-            var stateHistory = chatMessage.UpdateType switch
+            var stateHistory = chatMessage.Type switch
             {
-                EChatUpdateType.Message => await DetermineStateAsync(user.ChatId, chatMessage, stateFactory, cancellationToken),
-                EChatUpdateType.CallbackQuery => stateFactory.GetStateByNameOrDefault(markupNextState?.State),
+                UpdateType.Message => await DetermineStateAsync(user.ChatId, chatMessage, stateFactory, cancellationToken),
+                UpdateType.CallbackQuery => stateFactory.GetStateByNameOrDefault(markupNextState?.State),
                 _ => null,
             };
 
             if (stateHistory.IsNull())
             {
-                if (chatMessage.Message.PhotoDataOrNull.IsNotNull())
+                if (chatMessage.Message.ContainPhotoInMessage())
                 {
-                    stateHistory = await stateFactory.GetStateByCommandsTypeOrDefaultAsync(user.ChatId, CommandCollection.Instance.GetValueByKey(ECommandsType.SaveImage), cancellationToken);
+                    stateHistory = await stateFactory.GetStateByCommandsTypeOrDefault(user.ChatId, CommandCollection.Instance.GetValueByKey(ECommandsType.SaveImage), cancellationToken);
                 }
                 else
                 {
-                    stateHistory = await stateFactory.GetStateMainAsync(user.ChatId, cancellationToken);
+                    stateHistory = await stateFactory.GetStateMain(user.ChatId, cancellationToken);
                 }
             }
 
-            await using var stateContext = await stateContextFactory.CreateStateContextAsync(user, stateHistory!, chatMessage, markupNextState, cancellationToken);
+            await using var stateContext = await stateContextFactory.CreateStateContext(user, stateHistory!, chatMessage, markupNextState, cancellationToken);
 
             var stateResult = stateContextFactory.GetStateResult(stateContext);
 
             if (stateHistory!.MenuStateTypeOrNull.IsNotNull() || stateResult!.IsNeedUpdateMarkup)
             {
                 var markUp = stateResult!.IsNeedUpdateMarkup
-                    ? await stateFactory.GetLastStateWithMenuAsync(user.ChatId, cancellationToken)
+                    ? await stateFactory.GetLastStateWithMenu(user.ChatId, cancellationToken)
                     : stateHistory;
-                await menuButtonFactory.UpdateMainButtonsByStateAsync(user, stateContext, markUp, cancellationToken);
+                await menuButtonFactory.UpdateMainButtonsByState(user, stateContext, markUp, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -123,18 +126,18 @@ internal sealed class StartReceivingHandler(
         }
     }
 
-    private async Task DoWorkMemberAsync(User user, ChatUpdate chatMessage, CancellationToken cancellationToken)
+    private async Task DoWorkMemberAsync(User user, Update chatMessage, CancellationToken cancellationToken)
     {
         try
         {
-            var chatMember = chatMessage.MyMemberUpdateOrNull?.NewChatMember;
+            var chatMember = chatMessage.MyChatMember?.NewChatMember;
 
             if (chatMember.IsNull())
             {
                 return;
             }
 
-            if (chatMember!.Status.In(EChatMemberStatus.Kicked))
+            if (chatMember!.Status.In(ChatMemberStatus.Kicked))
             {
                 var updateUserCommand = new UpdateUserCommand(user.Id, EUserBlockType.KickedByUser);
                 await mediator.Send(updateUserCommand, cancellationToken);
@@ -142,7 +145,7 @@ internal sealed class StartReceivingHandler(
                 return;
             }
 
-            if (chatMember.Status.In(EChatMemberStatus.Member))
+            if (chatMember.Status.In(ChatMemberStatus.Member))
             {
                 var blockType = botType.GetBotType().BotSetting.WithRegistration
                     ? EUserBlockType.Registration
@@ -158,27 +161,27 @@ internal sealed class StartReceivingHandler(
         }
     }
 
-    private static async Task<StateHistory?> DetermineStateAsync(long chatId, ChatUpdate chatMessage, IStateFactory stateFactory, CancellationToken cancellationToken)
+    private static async Task<StateHistory?> DetermineStateAsync(long chatId, Update chatMessage, IStateFactory stateFactory, CancellationToken cancellationToken)
     {
-        var stateTypeText = TextCollection.Instance.GetKeyByValue(chatMessage.Message.ReplyToMessageOrNull?.Text);
-        var stateTypeButton = ButtonCollection.Instance.GetKeyByValue(chatMessage.Message.Text);
-        var stateTypeCommand = CommandCollection.Instance.GetKeyByValue(chatMessage.Message.Text);
+        var stateTypeText = TextCollection.Instance.GetKeyByValue(chatMessage.Message?.ReplyToMessage?.Text);
+        var stateTypeButton = ButtonCollection.Instance.GetKeyByValue(chatMessage.Message?.Text);
+        var stateTypeCommand = CommandCollection.Instance.GetKeyByValue(chatMessage.Message?.Text);
 
         if (stateTypeButton == EButtonsType.None
             && stateTypeText == ETextsType.None
             && stateTypeCommand == ECommandsType.None
            )
         {
-            return await stateFactory.GetBindStateOrNullAsync(chatId, cancellationToken);
+            return await stateFactory.GetBindStateOrNull(chatId, cancellationToken);
         }
 
         if (stateTypeButton != EButtonsType.None)
         {
             return stateTypeButton switch
             {
-                EButtonsType.ToBack => await stateFactory.GetStatePreviousOrMainAsync(chatId, cancellationToken),
-                EButtonsType.ToBackMain => await stateFactory.GetStateMainAsync(chatId, cancellationToken),
-                _ => await stateFactory.GetStateByButtonsTypeOrDefaultAsync(chatId, stateTypeButton.ToString(), cancellationToken),
+                EButtonsType.ToBack => await stateFactory.GetStatePreviousOrMain(chatId, cancellationToken),
+                EButtonsType.ToBackMain => await stateFactory.GetStateMain(chatId, cancellationToken),
+                _ => await stateFactory.GetStateByButtonsTypeOrDefault(chatId, stateTypeButton.ToString(), cancellationToken),
             };
         }
 
@@ -189,7 +192,7 @@ internal sealed class StartReceivingHandler(
 
         if (stateTypeCommand != ECommandsType.None)
         {
-            return await stateFactory.GetStateByCommandsTypeOrDefaultAsync(chatId, chatMessage.Message.Text, cancellationToken);
+            return await stateFactory.GetStateByCommandsTypeOrDefault(chatId, chatMessage.Message?.Text, cancellationToken);
         }
 
         return null;

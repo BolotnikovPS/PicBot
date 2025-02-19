@@ -11,9 +11,9 @@ namespace PicBot.Application.Bots.BotPlatform.States.MessageStates;
 [MyStateActivator(typeof(StartButton), CommandsTypes = [ECommandsType.Start,])]
 internal class MessageState : IMyState
 {
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
-        await context.SendTextMessageAsync(
+        await context.SendTextMessage(
             "Добро пожаловать на борт, добрый путник!",
             cancellationToken
             );
@@ -22,10 +22,10 @@ internal class MessageState : IMyState
                        .AppendLine("Команды в строке поиска:")
                        .AppendLine("    /my - мои ранее отправленные картинки.");
 
-        await context.SendTextMessageAsync(sbMessage.ToString(), cancellationToken);
+        await context.SendTextMessage(sbMessage.ToString(), cancellationToken);
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

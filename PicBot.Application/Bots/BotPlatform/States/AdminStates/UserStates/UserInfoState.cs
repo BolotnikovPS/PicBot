@@ -17,7 +17,7 @@ namespace PicBot.Application.Bots.BotPlatform.States.AdminStates.UserStates;
 [MyStateInlineActivator]
 internal class UserInfoState(IMediator mediator) : IMyState
 {
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
         var userFromState = await mediator.Send(
             new UserQuery(null, null, long.Parse(context.MarkupNextState.Data)),
@@ -59,10 +59,10 @@ internal class UserInfoState(IMediator mediator) : IMyState
                 )
             );
 
-        await context.SendOrUpdateTextMessageAsync(messageUserInfo, buttons, cancellationToken);
+        await context.SendOrUpdateTextMessage(messageUserInfo, buttons, cancellationToken);
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

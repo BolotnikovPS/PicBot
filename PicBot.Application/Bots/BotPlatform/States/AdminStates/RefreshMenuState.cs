@@ -16,13 +16,13 @@ namespace PicBot.Application.Bots.BotPlatform.States.AdminStates;
 [MyStateInlineActivator(ButtonsTypes = [EButtonsType.RefreshMenu,])]
 internal class RefreshMenuState(IEventDomainPublisher domainPublisher, ICacheService cacheService) : MyBaseState(cacheService), IMyState
 {
-    public async Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken)
+    public async Task Handle(IStateContext context, User user, CancellationToken cancellationToken)
     {
         if (context.MarkupNextState.IsNotNull())
         {
             await domainPublisher.PublishAsync(new RefreshMenuMessage(), cancellationToken);
 
-            await context.SendOrUpdateTextMessageAsync(GetDescription(ETextsType.MenuIsRefresh), cancellationToken);
+            await context.SendOrUpdateTextMessage(GetDescription(ETextsType.MenuIsRefresh), cancellationToken);
 
             return;
         }
@@ -33,10 +33,10 @@ internal class RefreshMenuState(IEventDomainPublisher domainPublisher, ICacheSer
             new MyInlineMarkupState(EInlineButtonsType.ToClose, nameof(MessageCloseState)),
         };
 
-        await context.SendOrUpdateTextMessageAsync(GetDescription(ETextsType.IsRefreshMenu), buttons, cancellationToken);
+        await context.SendOrUpdateTextMessage(GetDescription(ETextsType.IsRefreshMenu), buttons, cancellationToken);
     }
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

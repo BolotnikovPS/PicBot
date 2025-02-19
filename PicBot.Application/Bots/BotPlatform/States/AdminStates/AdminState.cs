@@ -10,9 +10,9 @@ namespace PicBot.Application.Bots.BotPlatform.States.AdminStates;
 [MyStateActivator(typeof(AdminMenuButton), ButtonsTypes = [EButtonsType.Admin,])]
 internal class AdminState : IMyState
 {
-    public Task HandleAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task Handle(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleCompleteAsync(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleComplete(IStateContext context, User user, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public Task HandleErrorAsync(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task HandleError(IStateContext context, User user, Exception exception, CancellationToken cancellationToken) => Task.CompletedTask;
 }

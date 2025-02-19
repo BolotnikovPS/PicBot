@@ -8,7 +8,7 @@ namespace PicBot.Application.Bots.BotPlatform.MenuButton;
 
 internal class AdminMenuButton : IMenuButton
 {
-    public Task<MainButtonMassiveList> GetMainButtonsAsync<T>(T user)
+    public Task<MainButtonMassiveList> GetMainButtons<T>(T user)
         where T : UserBase
     {
         var menu = new MainButtonMassiveList
